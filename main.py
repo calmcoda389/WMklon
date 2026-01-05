@@ -1,6 +1,10 @@
 import time
 from config import *
 from entities import tower, unit
+from systems.spawn_system import SpawnSystem
+from systems.unit_system import UnitSystem
+from systems.cleanup_system import CleanupSystem
+from systems.tower_system import TowerSystem
 import map
 
 class Game:
@@ -20,36 +24,23 @@ class Game:
         self.towers.append(tower.Tower(8, 5))
         self.towers.append(tower.Tower(14, 5))
         
-        self.spawn_timer = 0.0
         self.player_hp = 20
         
-    def spawn_unit(self):
-        self.units.append(unit.Unit(self.lane))
-
-
-
+        self.spawn_system = SpawnSystem(self.units, self.lane)
+        self.unit_system = UnitSystem(self.units)
+        self.cleanup_system = CleanupSystem(self.units, self)
+        self.tower_system = TowerSystem(self.towers, self.units)
 
     def update(self, dt):
-        #Units spwanen (alle 2 Sekunden)
-        self.spawn_timer += dt
-        if self.spawn_timer >= 2.0:
-            self.spawn_unit()
-            self.spawn_timer = 0.0
-            
+        #Units spwanen
+        self.spawn_system.update(dt)
+        
         #Units und Türme updaten
-        for unit in self.units:
-            unit.update(dt)
-
-        for tower in self.towers:
-            tower.update(dt, self.units)
+        self.unit_system.update(dt)
+        self.tower_system.update(dt)
             
         #Leaks and Deaths aufräumen
-        for unit in list(self.units):
-            if not unit.alive:
-                self.units.remove(unit)
-            elif unit.path_index >= len(unit.lane.points):
-                self.player_hp -= 1
-                self.units.remove(unit)
+        self.cleanup_system.update()
     
     def debug_print(self):
         print(f"Units: {len(self.units)} | Player HP: {self.player_hp}")
@@ -61,7 +52,7 @@ class Game:
                 f"path_index={u.path_index}"
             )
     
-    #def Draw():
+    #def draw():
         #draw map, units and towers on the screen
             
 ### MAIN LOOP ###

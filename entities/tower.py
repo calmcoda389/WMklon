@@ -14,7 +14,7 @@ class Tower:
         
     def update(self, dt, units):
         self.cooldown -= dt
-        if self.cooldown <= 0:
+        if self.cooldown > 0:
             return
         
         target = self.find_target(units)

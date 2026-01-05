@@ -24,7 +24,12 @@ class Unit:
     
     def progress(self):
         #Fortschritt entlang der Lane, wird für Targeting genutzt
-        return self.path_index
+        target = self.current_target()
+        if target is None:
+            return self.path_index
+        tx, ty = target
+        dist = math.hypot(tx - self.x, ty - self.y) #je näher am Zielpunkt, desto größer der Fortschritt
+        return self.path_index + (1.0 / (1.0 + dist))
 
     def update(self, dt):
         #Bewegung entlang der Lane
