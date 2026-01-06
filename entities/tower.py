@@ -26,14 +26,19 @@ class Tower:
         return math.hypot(self.x - unit.x, self.y - unit.y)
     
     def find_target(self, units):
-        #Ziel = Unit mit größtem Fortschritt in Reichweite
-        
-        candidates = [
-            u for u in units
-            if u.alive and self.distance(u) <= self.range
-        ]
-        
-        if not candidates:
-            return None
-        
-        return max(candidates, key=lambda u: u.progress())
+        best_target = None
+        best_progress = -1.0
+
+        for u in units:
+            if not u.alive:
+                continue
+
+            if self.distance(u) > self.range:
+                continue
+
+            p = u.progress()
+            if p > best_progress:
+                best_progress = p
+                best_target = u
+
+        return best_target

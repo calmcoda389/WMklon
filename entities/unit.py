@@ -1,9 +1,9 @@
 import math
 from config import *
-import map
+import game_map
 
 class Unit:
-    def __init__(self, lane: map.Lane):
+    def __init__(self, lane: game_map.Lane):
         self.lane = lane
         self.path_index = 0
         
@@ -15,6 +15,7 @@ class Unit:
         self.move_speed = UNIT_MOVE_SPEED
         
         self.alive = True
+        self._progress = 0.0
     
     def current_target(self):
         #Aktueller Wegpunkt
@@ -23,13 +24,7 @@ class Unit:
         return self.lane.points[self.path_index]
     
     def progress(self):
-        #Fortschritt entlang der Lane, wird für Targeting genutzt
-        target = self.current_target()
-        if target is None:
-            return self.path_index
-        tx, ty = target
-        dist = math.hypot(tx - self.x, ty - self.y) #je näher am Zielpunkt, desto größer der Fortschritt
-        return self.path_index + (1.0 / (1.0 + dist))
+        return self._progress
 
     def update(self, dt):
         #Bewegung entlang der Lane
@@ -48,6 +43,7 @@ class Unit:
         #Wegpunkt erreicht
         if dist < 0.05:
             self.path_index += 1
+            self._progress = self.path_index
             return
         
         vx = dx / dist

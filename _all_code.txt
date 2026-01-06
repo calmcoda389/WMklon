@@ -6,74 +6,90 @@ TOWER_DAMAGE = 25
 TOWER_ATTACK_SPEED = 1.0 #Angriffe pro Sekunde
 #main.py
 import time
-from config import *
-from entities import tower, unit
+import pygame
+from config import TICK_RATE
+from game_state import GameState
+from renderer_pygame import PygameRenderer
+
+if __name__ == "__main__":
+    state = GameState()
+    renderer = PygameRenderer()
+
+    clock = pygame.time.Clock()
+    running = True
+
+    while running and state.player_hp > 0:
+        dt = clock.tick(60) / 1000.0
+        
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:
+                running = False
+        
+        state.update(dt)
+        renderer.draw(state)
+    
+    pygame.quit()
+
+'''# # # # # # # # # # # # # # # # 
+# Headless Test #
+print("WintermaulWars Prototyp gestartet\n")
+
+while state.player_hp > 0:
+    state.update(TICK_RATE)
+
+    print(f"Units: {len(state.units)} | Player HP: {state.player_hp}")
+    for i, u in enumerate(state.units):
+        print(
+            f" Unit {i}: "
+            f"pos=({u.x:.1f}, {u.y:.1f}) "
+            f"hp={u.hp} "
+            f"path_index={u.path_index}"
+        )
+
+    print("-" * 40)
+    time.sleep(TICK_RATE)
+# # # # # # # # # # # # # # # # # # '''
+#game_state
 from systems.spawn_system import SpawnSystem
 from systems.unit_system import UnitSystem
 from systems.cleanup_system import CleanupSystem
 from systems.tower_system import TowerSystem
-import map
+from entities import tower
+import game_map
 
-class Game:
-    #Zentrale Spielsimulation
+class GameState:
     def __init__(self):
-        self.lane = map.Lane([
+        self.player_hp = 20
+        self.units = []
+        self.towers = []
+
+        self.lane = game_map.Lane([
             (0, 5),
             (10, 5),
             (15, 8),
             (20, 8)
         ])
-        
-        self.units = []
-        self.towers = []
-        
-        #Beispiel-Tower
-        self.towers.append(tower.Tower(8, 5))
-        self.towers.append(tower.Tower(14, 5))
-        
-        self.player_hp = 20
-        
+
+        self.towers.append(tower.Tower(8, 4))
+        self.towers.append(tower.Tower(14, 4))
+
         self.spawn_system = SpawnSystem(self.units, self.lane)
         self.unit_system = UnitSystem(self.units)
-        self.cleanup_system = CleanupSystem(self.units, self)
+        self.cleanup_system = CleanupSystem(
+            self.units,
+            on_unit_leak=self.on_unit_leak
+        )
         self.tower_system = TowerSystem(self.towers, self.units)
 
+    def on_unit_leak(self):
+        self.player_hp -= 1
+
     def update(self, dt):
-        #Units spwanen
         self.spawn_system.update(dt)
-        
-        #Units und Türme updaten
         self.unit_system.update(dt)
         self.tower_system.update(dt)
-            
-        #Leaks and Deaths aufräumen
         self.cleanup_system.update()
-    
-    def debug_print(self):
-        print(f"Units: {len(self.units)} | Player HP: {self.player_hp}")
-        for i, u in enumerate(self.units):
-            print(
-                f" Unit {i}: "
-                f"pos=({u.x:.1f}, {u.y:.1f}) "
-                f"hp={u.hp} "
-                f"path_index={u.path_index}"
-            )
-    
-    #def draw():
-        #draw map, units and towers on the screen
-            
-### MAIN LOOP ###
-if __name__ == "__main__":
-    game = Game()
-
-    print("Wintermaul Lane Prototyp gestartet\n")
-    
-    while game.player_hp > 0:
-        game.update(TICK_RATE)
-        game.debug_print()
-        print("-" * 40)
-        time.sleep(TICK_RATE)
-#map.py
+#game_map.py
 class Tile:
     def __init__(self, walkable: bool, buildable: bool):
         self.walkable = walkable
@@ -92,6 +108,58 @@ class Lane:
     # Feste Abfolge von Wegpukten
     def __init__(self, points):
         self.points = points #Liste von (x, y)
+#renderer_pygame
+import pygame
+import game_map
+
+class PygameRenderer:
+    def __init__(self, tile_size=32):
+        pygame.init()
+        self.tile_size = tile_size
+        self.screen = pygame.display.set_mode((800, 600))
+        pygame.display.set_caption("Wintermaul TD")
+
+    def draw(self, state):
+        self.screen.fill((30, 30, 30))
+
+        # Units
+        for u in state.units:
+            x = int(u.x * self.tile_size)
+            y = int(u.y * self.tile_size)
+            pygame.draw.circle(self.screen, (200, 50, 50), (x, y), 8)
+
+        # Towers
+        for t in state.towers:
+            x = int(t.x * self.tile_size)
+            y = int(t.y * self.tile_size)
+            pygame.draw.rect(
+                self.screen,
+                (50, 200, 50),
+                pygame.Rect(x - 10, y - 10, 20, 20)
+            )
+        
+        # Lane Points (Spawn / Path)
+        for px, py in state.lane.points:
+            x = int(px * self.tile_size)
+            y = int(py * self.tile_size)
+            pygame.draw.circle(self.screen, (200, 200, 0), (x, y), 4)
+        
+        ## Lane Points verbinden
+        #points_px = [
+        #    (int(px * self.tile_size), int(py * self.tile_size))
+        #    for px, py in state.lane.points
+        #]
+
+        #if len(points_px) > 1:
+        #    pygame.draw.lines(
+        #        self.screen,
+        #        (80, 80, 220),
+        #        False,
+        #        points_px,
+        #        2
+        #    )
+        
+        pygame.display.flip()
 #entities/tower.py
 import math
 from entities import unit
@@ -121,24 +189,29 @@ class Tower:
         return math.hypot(self.x - unit.x, self.y - unit.y)
     
     def find_target(self, units):
-        #Ziel = Unit mit größtem Fortschritt in Reichweite
-        
-        candidates = [
-            u for u in units
-            if u.alive and self.distance(u) <= self.range
-        ]
-        
-        if not candidates:
-            return None
-        
-        return max(candidates, key=lambda u: u.progress())
+        best_target = None
+        best_progress = -1.0
+
+        for u in units:
+            if not u.alive:
+                continue
+
+            if self.distance(u) > self.range:
+                continue
+
+            p = u.progress()
+            if p > best_progress:
+                best_progress = p
+                best_target = u
+
+        return best_target
 #entities/unit.py
 import math
 from config import *
-import map
+import game_map
 
 class Unit:
-    def __init__(self, lane: map.Lane):
+    def __init__(self, lane: game_map.Lane):
         self.lane = lane
         self.path_index = 0
         
@@ -150,6 +223,7 @@ class Unit:
         self.move_speed = UNIT_MOVE_SPEED
         
         self.alive = True
+        self._progress = 0.0
     
     def current_target(self):
         #Aktueller Wegpunkt
@@ -158,13 +232,7 @@ class Unit:
         return self.lane.points[self.path_index]
     
     def progress(self):
-        #Fortschritt entlang der Lane, wird für Targeting genutzt
-        target = self.current_target()
-        if target is None:
-            return self.path_index
-        tx, ty = target
-        dist = math.hypot(tx - self.x, ty - self.y) #je näher am Zielpunkt, desto größer der Fortschritt
-        return self.path_index + (1.0 / (1.0 + dist))
+        return self._progress
 
     def update(self, dt):
         #Bewegung entlang der Lane
@@ -183,6 +251,7 @@ class Unit:
         #Wegpunkt erreicht
         if dist < 0.05:
             self.path_index += 1
+            self._progress = self.path_index
             return
         
         vx = dx / dist
@@ -198,17 +267,24 @@ class Unit:
             self.alive = False
 #systems/cleanup_system.py
 class CleanupSystem:
-    def __init__(self, units, game):
+    def __init__(self, units, on_unit_leak):
         self.units = units
-        self.game = game
-        
+        self.on_unit_leak = on_unit_leak
+
     def update(self):
-        for unit in list(self.units):
+        alive_units = []
+
+        for unit in self.units:
             if not unit.alive:
-                self.units.remove(unit)
-            elif unit.path_index >= len(unit.lane.points):
-                self.game.player_hp -= 1
-                self.units.remove(unit)
+                continue
+
+            if unit.path_index >= len(unit.lane.points):
+                self.on_unit_leak()
+                continue
+
+            alive_units.append(unit)
+
+        self.units[:] = alive_units
 #systems/economy_system.py
 class Player:
     def __init__(self):
