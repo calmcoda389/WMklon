@@ -8,6 +8,6 @@ class SpawnSystem:
         
     def update(self, dt):
         self.timer += dt
-        if self.timer >= 2.0:
+        if self.timer >= 1.25:
             self.units.append(Unit(self.lane))
             self.timer = 0.0

@@ -64,14 +64,45 @@ class GameState:
         self.towers = []
 
         self.lane = game_map.Lane([
-            (0, 5),
-            (10, 5),
-            (15, 8),
-            (20, 8)
+            (24, 41),
+            (8, 41),
+            (8, 65),
+            (24, 65),
+            (24, 80)
         ])
 
-        self.towers.append(tower.Tower(8, 4))
-        self.towers.append(tower.Tower(14, 4))
+        self.towers.append(tower.Tower(21, 69))
+        self.towers.append(tower.Tower(22, 69))
+        self.towers.append(tower.Tower(23, 69))
+        self.towers.append(tower.Tower(24, 69))
+        self.towers.append(tower.Tower(25, 69))
+        self.towers.append(tower.Tower(26, 69))
+        self.towers.append(tower.Tower(27, 69))
+        
+        self.towers.append(tower.Tower(28, 71))
+        self.towers.append(tower.Tower(22, 71))
+        self.towers.append(tower.Tower(23, 71))
+        self.towers.append(tower.Tower(24, 71))
+        self.towers.append(tower.Tower(25, 71))
+        self.towers.append(tower.Tower(26, 71))
+        self.towers.append(tower.Tower(27, 71))
+        
+        self.towers.append(tower.Tower(21, 73))
+        self.towers.append(tower.Tower(22, 73))
+        self.towers.append(tower.Tower(23, 73))
+        self.towers.append(tower.Tower(24, 73))
+        self.towers.append(tower.Tower(25, 73))
+        self.towers.append(tower.Tower(26, 73))
+        self.towers.append(tower.Tower(27, 73))
+        
+        self.towers.append(tower.Tower(28, 75))
+        self.towers.append(tower.Tower(22, 75))
+        self.towers.append(tower.Tower(23, 75))
+        self.towers.append(tower.Tower(24, 75))
+        self.towers.append(tower.Tower(25, 75))
+        self.towers.append(tower.Tower(26, 75))
+        self.towers.append(tower.Tower(27, 75))
+
 
         self.spawn_system = SpawnSystem(self.units, self.lane)
         self.unit_system = UnitSystem(self.units)
@@ -89,6 +120,7 @@ class GameState:
         self.unit_system.update(dt)
         self.tower_system.update(dt)
         self.cleanup_system.update()
+
 #game_map.py
 class Tile:
     def __init__(self, walkable: bool, buildable: bool):
@@ -113,10 +145,10 @@ import pygame
 import game_map
 
 class PygameRenderer:
-    def __init__(self, tile_size=32):
+    def __init__(self, tile_size=12):
         pygame.init()
         self.tile_size = tile_size
-        self.screen = pygame.display.set_mode((800, 600))
+        self.screen = pygame.display.set_mode((576, 960))
         pygame.display.set_caption("Wintermaul TD")
 
     def draw(self, state):
@@ -126,7 +158,7 @@ class PygameRenderer:
         for u in state.units:
             x = int(u.x * self.tile_size)
             y = int(u.y * self.tile_size)
-            pygame.draw.circle(self.screen, (200, 50, 50), (x, y), 8)
+            pygame.draw.circle(self.screen, (200, 50, 50), (x, y), 6)
 
         # Towers
         for t in state.towers:
@@ -135,14 +167,14 @@ class PygameRenderer:
             pygame.draw.rect(
                 self.screen,
                 (50, 200, 50),
-                pygame.Rect(x - 10, y - 10, 20, 20)
+                pygame.Rect(x - 5, y - 5, 10, 10)
             )
         
         # Lane Points (Spawn / Path)
         for px, py in state.lane.points:
             x = int(px * self.tile_size)
             y = int(py * self.tile_size)
-            pygame.draw.circle(self.screen, (200, 200, 0), (x, y), 4)
+            pygame.draw.circle(self.screen, (200, 200, 0), (x, y), 3)
         
         ## Lane Points verbinden
         #points_px = [
@@ -160,6 +192,7 @@ class PygameRenderer:
         #    )
         
         pygame.display.flip()
+
 #entities/tower.py
 import math
 from entities import unit
@@ -304,7 +337,7 @@ class SpawnSystem:
         
     def update(self, dt):
         self.timer += dt
-        if self.timer >= 2.0:
+        if self.timer >= 1.25:
             self.units.append(Unit(self.lane))
             self.timer = 0.0
 #systems/tower_system.py

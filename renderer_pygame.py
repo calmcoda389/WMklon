@@ -2,10 +2,10 @@ import pygame
 import game_map
 
 class PygameRenderer:
-    def __init__(self, tile_size=32):
+    def __init__(self, tile_size=12):
         pygame.init()
         self.tile_size = tile_size
-        self.screen = pygame.display.set_mode((800, 640))
+        self.screen = pygame.display.set_mode((576, 960))
         pygame.display.set_caption("Wintermaul TD")
 
     def draw(self, state):
@@ -15,7 +15,7 @@ class PygameRenderer:
         for u in state.units:
             x = int(u.x * self.tile_size)
             y = int(u.y * self.tile_size)
-            pygame.draw.circle(self.screen, (200, 50, 50), (x, y), 8)
+            pygame.draw.circle(self.screen, (200, 50, 50), (x, y), 6)
 
         # Towers
         for t in state.towers:
@@ -24,14 +24,14 @@ class PygameRenderer:
             pygame.draw.rect(
                 self.screen,
                 (50, 200, 50),
-                pygame.Rect(x - 10, y - 10, 20, 20)
+                pygame.Rect(x - 5, y - 5, 10, 10)
             )
         
         # Lane Points (Spawn / Path)
         for px, py in state.lane.points:
             x = int(px * self.tile_size)
             y = int(py * self.tile_size)
-            pygame.draw.circle(self.screen, (200, 200, 0), (x, y), 4)
+            pygame.draw.circle(self.screen, (200, 200, 0), (x, y), 3)
         
         ## Lane Points verbinden
         #points_px = [

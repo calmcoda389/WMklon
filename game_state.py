@@ -12,16 +12,45 @@ class GameState:
         self.towers = []
 
         self.lane = game_map.Lane([
-            (2, 20),
-            (2, 2),
-            (20, 2),
-            (20, 10),
-            (25, 10)
+            (24, 41),
+            (8, 41),
+            (8, 65),
+            (24, 65),
+            (24, 80)
         ])
 
-        self.towers.append(tower.Tower(3, 3))
-        self.towers.append(tower.Tower(19, 3))
-        self.towers.append(tower.Tower(21, 9))
+        self.towers.append(tower.Tower(21, 69))
+        self.towers.append(tower.Tower(22, 69))
+        self.towers.append(tower.Tower(23, 69))
+        self.towers.append(tower.Tower(24, 69))
+        self.towers.append(tower.Tower(25, 69))
+        self.towers.append(tower.Tower(26, 69))
+        self.towers.append(tower.Tower(27, 69))
+        
+        self.towers.append(tower.Tower(28, 71))
+        self.towers.append(tower.Tower(22, 71))
+        self.towers.append(tower.Tower(23, 71))
+        self.towers.append(tower.Tower(24, 71))
+        self.towers.append(tower.Tower(25, 71))
+        self.towers.append(tower.Tower(26, 71))
+        self.towers.append(tower.Tower(27, 71))
+        
+        self.towers.append(tower.Tower(21, 73))
+        self.towers.append(tower.Tower(22, 73))
+        self.towers.append(tower.Tower(23, 73))
+        self.towers.append(tower.Tower(24, 73))
+        self.towers.append(tower.Tower(25, 73))
+        self.towers.append(tower.Tower(26, 73))
+        self.towers.append(tower.Tower(27, 73))
+        
+        self.towers.append(tower.Tower(28, 75))
+        self.towers.append(tower.Tower(22, 75))
+        self.towers.append(tower.Tower(23, 75))
+        self.towers.append(tower.Tower(24, 75))
+        self.towers.append(tower.Tower(25, 75))
+        self.towers.append(tower.Tower(26, 75))
+        self.towers.append(tower.Tower(27, 75))
+
 
         self.spawn_system = SpawnSystem(self.units, self.lane)
         self.unit_system = UnitSystem(self.units)
